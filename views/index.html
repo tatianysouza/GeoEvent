@@ -1,31 +1,97 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Adicionar Evento</title>
+    <title>Gerenciar Eventos</title>
+    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
 </head>
+
 <body>
+    <header>Gerenciar Eventos</header>
+    <div class="container">
 
-    <h1>Cadastrar Evento</h1>
-    <form action="/api/eventos" method="POST">
-        <label for="titulo">Título:</label>
-        <input type="text" id="titulo" name="titulo" required><br><br>
+        <div id="map" style="height: 400px; width: 100%;"></div>
 
-        <label for="descricao">Descrição:</label>
-        <textarea id="descricao" name="descricao" required></textarea><br><br>
+        <div class="button-container">
+            <button class="new" onclick="abrirModal('modal-cadastro')">Criar Novo Evento</button>
+            <button class="view" onclick="mostrarLista()">Visualizar Eventos</button>
+        </div>
 
-        <label for="data">Data:</label>
-        <input type="date" id="data" name="data" required><br><br>
+        <div id="lista-eventos" style="display: none;">
+            <table id="tabela-eventos">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Título</th>
+                        <th>Descrição</th>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Localização</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Os eventos serão exibidos aqui -->
+                </tbody>
+            </table>
+        </div>
 
-        <label for="hora">Hora:</label>
-        <input type="time" id="hora" name="hora" required><br><br>
+    </div>
 
-        <label for="localizacao">Localização:</label>
-        <input type="text" id="localizacao" name="localizacao" required><br><br>
+    <!-- Modal de Cadastro -->
+    <div class="modal" id="modal-cadastro">
+        <div class="modal-content">
+            <h2>Novo Evento</h2>
+            <form id="form-cadastro">
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" name="titulo" required>
+                <label for="descricao">Descrição:</label>
+                <textarea id="descricao" name="descricao" required></textarea>
+                <label for="data">Data:</label>
+                <input type="date" id="data" name="data" required>
+                <label for="hora">Hora:</label>
+                <input type="time" id="hora" name="hora" required>
+                <label for="localizacao">Localização:</label>
+                <input type="text" id="localizacao" name="localizacao" required>
+                <button type="submit">Cadastrar</button>
+            </form>
+            <button onclick="fecharModal('modal-cadastro')">Cancelar</button>
+        </div>
+    </div>
 
-        <button type="submit">Cadastrar Evento</button>
-    </form>
+    <!-- Modal de Edição -->
+    <div class="modal" id="modal-editar" style="display: none;">
+        <div class="modal-content">
+            <h2>Atualizar Evento</h2>
+            <form id="form-editar">
+                <label for="edit-titulo">Título</label>
+                <input type="text" id="edit-titulo" name="edit-titulo" required>
     
+                <label for="edit-descricao">Descrição</label>
+                <textarea id="edit-descricao" name="edit-descricao" required></textarea>
+    
+                <label for="edit-data">Data</label>
+                <input type="date" id="edit-data" name="edit-data" required>
+    
+                <label for="edit-hora">Hora</label>
+                <input type="time" id="edit-hora" name="edit-hora" required>
+    
+                <label for="edit-localizacao">Localização</label>
+                <input type="text" id="edit-localizacao" name="edit-localizacao" placeholder="Lat, Lng" required>
+    
+                <button type="submit">Salvar</button>
+                <button type="button" onclick="fecharModal('modal-editar')">Cancelar</button>
+            </form>
+        </div>
+    </div>
+    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="mapa.js"></script>
+    <script src="/script.js"></script>
 </body>
+
 </html>
