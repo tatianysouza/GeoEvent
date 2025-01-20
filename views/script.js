@@ -1,6 +1,37 @@
 
 const API_URL = '/eventos';
 const cadastrar = document.querySelector('#form-cadastro');
+const geocodeUrl = 'https://nominatim.openstreetmap.org/search?format=json&q=';
+let mapMarker = null;
+
+// Buscar localização usando Nominatim
+document.getElementById('buscar').addEventListener('click', () => {
+    const query = document.getElementById('localizacao').value;
+    fetch(geocodeUrl + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                document.getElementById('latitude').value = data[0].lat;
+                document.getElementById('longitude').value = data[0].lon;
+            } else {
+                alert('Localização não encontrada!');
+            }
+        });
+});
+
+document.getElementById('buscar-edit').addEventListener('click', () => {
+    const query = document.getElementById('edit-localizacao').value;
+    fetch(geocodeUrl + encodeURIComponent(query))
+        .then(response => response.json())
+        .then(data => {
+            if (data.length > 0) {
+                document.getElementById('edit-latitude').value = data[0].lat;
+                document.getElementById('edit-longitude').value = data[0].lon;
+            } else {
+                alert('Localização não encontrada!');
+            }
+        });
+});
 
 async function listarEventos() {
     try {
@@ -14,13 +45,14 @@ async function listarEventos() {
             eventos.forEach(evento => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${evento.id}</td>
                     <td>${evento.titulo}</td>
                     <td>${evento.descricao}</td>
                     <td>${new Date(evento.data).toLocaleDateString()}</td>
                     <td>${evento.hora}</td>
+                    <td>${evento.publico_alvo}</td>
                     <td>Lat: ${evento.localizacao.coordinates[0]}, Lng: ${evento.localizacao.coordinates[1]}</td>
                     <td class="actions">
+                        <button onclick="verNoMapa('${evento.id}')">Ver Local</button>
                         <button onclick="abrirEditarEvento('${evento.id}')">Editar</button>
                         <button onclick="excluirEvento('${evento.id}')">Excluir</button>
                     </td>
@@ -36,6 +68,11 @@ async function listarEventos() {
     }
 }
 
+function limparFormulario(){
+    let form = document.getElementById('form-cadastro');
+    form.reset();
+}
+
 
 if (cadastrar) {
     cadastrar.addEventListener('submit', async function (event) {
@@ -45,17 +82,20 @@ if (cadastrar) {
         const descricao = document.querySelector('#descricao').value;
         const data = document.querySelector('#data').value;
         const hora = document.querySelector('#hora').value;
-        const localizacao = document.querySelector('#localizacao').value;
+        const publico_alvo = document.querySelector('#publico-alvo').value;
 
         const evento = {
             titulo,
             descricao,
             data,
             hora,
-            publico_alvo: "Público Geral",
+            publico_alvo: publico_alvo || "Público Geral",
             localizacao: {
                 type: "Point",
-                coordinates: localizacao.split(',').map(coord => parseFloat(coord.trim()))
+                coordinates: [
+                    parseFloat(document.getElementById('longitude').value),
+                    parseFloat(document.getElementById('latitude').value)
+                ]
             }
         };
 
@@ -68,6 +108,7 @@ if (cadastrar) {
 
             if (response.ok) {
                 alert('Evento cadastrado com sucesso!');
+                limparFormulario();
                 fecharModal('modal-cadastro');
                 listarEventos();
             } else {
@@ -95,14 +136,18 @@ async function abrirEditarEvento(id) {
         const descricaoField = document.querySelector('#edit-descricao');
         const dataField = document.querySelector('#edit-data');
         const horaField = document.querySelector('#edit-hora');
-        const localizacaoField = document.querySelector('#edit-localizacao');
+        const publicoField = document.querySelector('#edit-publico-alvo');
+        const latitudeField = document.querySelector('#edit-latitude');
+        const longitudeField = document.querySelector('#edit-longitude');
 
-        if (tituloField && descricaoField && dataField && horaField && localizacaoField) {
+        if (tituloField && descricaoField && dataField && horaField && latitudeField && longitudeField) {
             tituloField.value = dados.titulo;
             descricaoField.value = dados.descricao;
             dataField.value = new Date(dados.data).toLocaleDateString();
             horaField.value = dados.hora;
-            localizacaoField.value = dados.localizacao.coordinates.join(', ');
+            publicoField.value = dados.publico_alvo;
+            latitudeField.value = dados.localizacao.coordinates[0];
+            longitudeField.value = dados.localizacao.coordinates[1];
 
             // Configura o botão de salvar com o ID do evento
             const salvarEdicao = document.querySelector('#form-editar');
@@ -130,9 +175,13 @@ async function editarEvento(id) {
         descricao: document.querySelector('#edit-descricao').value,
         data: document.querySelector('#edit-data').value,
         hora: document.querySelector('#edit-hora').value,
+        publico_alvo: document.querySelector('#edit-publico-alvo').value,
         localizacao: {
             type: "Point",
-            coordinates: document.querySelector('#edit-localizacao').value.split(',').map(coord => parseFloat(coord.trim()))
+            coordinates:[
+                parseFloat(document.getElementById('edit-longitude').value),
+                parseFloat(document.getElementById('edit-latitude').value)
+            ]
         }
     };
 
@@ -140,7 +189,7 @@ async function editarEvento(id) {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            params: { id },
+            // params: { id },
             body: JSON.stringify(updatedEvento)
         });
 
@@ -155,9 +204,7 @@ async function editarEvento(id) {
     } catch (err) {
         console.error('Erro ao atualizar evento:', err);
         alert('Não foi possível atualizar o evento.');
-    }
-
-    
+    } 
 }
 
 async function excluirEvento(id) {
@@ -182,6 +229,61 @@ async function excluirEvento(id) {
     }
 }
 
+async function verNoMapa(id) {
+    if (!id) {
+        alert('ID do evento inválido.');
+        console.error('ID do evento é inválido ou undefined.');
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/${id}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erro da API:', errorText);
+            alert('Erro ao carregar localização do evento: ' + (errorText || 'Erro desconhecido'));
+            return;
+        }
+
+        const evento = await response.json();
+        const [longitude, latitude] = evento.localizacao.coordinates;
+
+        if (mapMarker) {
+            map.removeLayer(mapMarker);
+        }
+
+        map.setView([latitude, longitude], 13);
+        mapMarker = L.marker([latitude, longitude]).addTo(map)
+            .bindPopup(`<b>${evento.titulo}</b><br>${evento.descricao}`).openPopup();
+    } catch (err) {
+        console.error('Erro ao carregar localização', err);
+        alert('Erro ao carregar localização: ' + err.message);
+    }
+}
+
+async function excluirEvento(id) {
+    if (confirm('Tem certeza que deseja excluir este evento?')) {
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                alert('Evento excluído com sucesso!');
+                listarEventos();
+            } else {
+                const error = await response.json();
+                alert(`Erro ao excluir evento: ${error.message || 'Erro desconhecido'}`);
+            }
+
+        } catch (err) {
+            console.error('Erro ao excluir evento:', err);
+            alert('Não foi possível excluir o evento.');
+        }
+    }
+}
+
 if (document.querySelector('#tabela-eventos tbody')) {
     listarEventos();
 } else {
@@ -196,6 +298,7 @@ function abrirModal(modalId) {
 // Fecha um modal especificado
 function fecharModal(modalId) {
     document.getElementById(modalId).style.display = 'none';
+    limparFormulario();
 }
 
 function mostrarLista() {

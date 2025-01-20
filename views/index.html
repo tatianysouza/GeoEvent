@@ -25,11 +25,11 @@
             <table id="tabela-eventos">
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Título</th>
                         <th>Descrição</th>
                         <th>Data</th>
                         <th>Hora</th>
+                        <th>Público-Alvo</th>
                         <th>Localização</th>
                         <th>Ações</th>
                     </tr>
@@ -55,8 +55,14 @@
                 <input type="date" id="data" name="data" required>
                 <label for="hora">Hora:</label>
                 <input type="time" id="hora" name="hora" required>
+                <label for="publico-alvo">Público-Alvo</label>
+                <input type="text" id="publico-alvo" name="publico-alvo">
                 <label for="localizacao">Localização:</label>
-                <input type="text" id="localizacao" name="localizacao" required>
+                <input type="text" id="localizacao" name="localizacao">
+                <!-- Buscar por localização -->
+                <button type="button" id="buscar">Buscar</button><br>
+                <input type="number" id="latitude" placeholder="Latitude" step="any"><br>
+                <input type="number" id="longitude" placeholder="Longitude" step="any"><br>
                 <button type="submit">Cadastrar</button>
             </form>
             <button onclick="fecharModal('modal-cadastro')">Cancelar</button>
@@ -79,10 +85,17 @@
     
                 <label for="edit-hora">Hora</label>
                 <input type="time" id="edit-hora" name="edit-hora" required>
+
+                <label for="publico-alvo">Público-Alvo</label>
+                <input type="text" id="edit-publico-alvo" name="edit-publico-alvo">
     
                 <label for="edit-localizacao">Localização</label>
-                <input type="text" id="edit-localizacao" name="edit-localizacao" placeholder="Lat, Lng" required>
-    
+                <input type="text" id="edit-localizacao" name="edit-localizacao" placeholder="Buscar">
+
+                <button type="button" id="buscar-edit">Buscar</button>
+                <input type="number" id="edit-latitude" placeholder="Latitude" step="any">
+                <input type="number" id="edit-longitude" placeholder="Longitude" step="any">
+
                 <button type="submit">Salvar</button>
                 <button type="button" onclick="fecharModal('modal-editar')">Cancelar</button>
             </form>
