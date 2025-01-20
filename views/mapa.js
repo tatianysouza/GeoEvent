@@ -34,8 +34,33 @@ async function adicionarMarcadores() {
     }
 }
 
+// Função para centralizar o mapa na localização do usuário
+function localizacaoAtual() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+
+                map.setView([latitude, longitude], 13);
+
+                L.marker([latitude, longitude])
+                    .addTo(map)
+                    .bindPopup('Você está aqui!')
+                    .openPopup();
+            },
+            (error) => {
+                console.error('Erro ao acessar geolocalização:', error.message);
+                alert('Não foi possível acessar sua localização. Certifique-se de que a permissão foi concedida.');
+            }
+        );
+    } else {
+        alert('Seu navegador não suporta geolocalização.');
+    }
+}
+
 // Chama as funções ao carregar a página
 window.onload = function () {
+    localizacaoAtual();
     inicializarMapa();
     adicionarMarcadores();
 };
